@@ -12,7 +12,7 @@
   (let [owners (set (filter 
                       some? 
                       (vals ownerships)))]
-    (if (= 1(count owners))
+    (if (= 1 (count owners))
       (first owners)
       nil)))
 
@@ -26,7 +26,10 @@
   :ret boolean?)
 
 
-(defn can-attack? [{:keys [::state/connections ::state/garrisons ::state/ownerships]} player from to]
+(defn can-attack? [{:keys [::state/connections 
+                           ::state/garrisons 
+                           ::state/ownerships]} 
+                   player from to]
   (and (contains? (get connections from) to)
        (= player (get ownerships from))
        (not= player (get ownerships to))
@@ -40,7 +43,10 @@
   :ret int?)
 
 
-(defn reinforcement-size [{:keys [::state/bonuses ::state/groups ::state/ownerships]} player]
+(defn reinforcement-size [{:keys [::state/bonuses 
+                                  ::state/groups 
+                                  ::state/ownerships]} 
+                          player]
   (let [owned-territories (set (map
                                  first
                                  (filter 
@@ -57,7 +63,6 @@
                             (partial every? (partial contains? owned-territories)) 
                             second) 
                           groups))))))))
-       
 
 
 
