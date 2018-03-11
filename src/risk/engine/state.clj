@@ -34,6 +34,12 @@
     #(> (count %) 1)))
 
 
+(spec/def ::reserves
+  (spec/map-of 
+    string? 
+    (spec/and int? (complement neg?))))
+
+
 (spec/def ::territories
   (spec/coll-of string?))
 
@@ -104,11 +110,20 @@
     (every?
       (partial
         contains?
-        players)
+        (set players))
       (reduce
         (fn [r x] (into r (second x)))
         []
         ownerships))))
+
+
+(spec/def ::reserves-include-only-known-players
+  (fn [{:keys [::reserves ::players]}]
+    (every?
+      (partial
+        contains?
+        (set players))
+      (keys reserves))))
 
 
 (spec/def ::state 
@@ -120,6 +135,7 @@
                      ::moving-player-index
                      ::ownerships
                      ::players
+                     ::reserves
                      ::territories])
     ::territories-are-assigned-to-exactly-one-group
     ::groups-have-bonus-assigned
@@ -127,5 +143,6 @@
     ::owned-territories-have-at-least-one-army-in-its-garrison
     ::connections-include-only-known-territories
     ::groups-include-only-known-territories
-    ::ownerships-include-only-known-players))
+    ::ownerships-include-only-known-players
+    ::reserves-include-only-known-players))
     

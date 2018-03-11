@@ -12,7 +12,10 @@
                        ::state/groups {}
                        ::state/moving-player-index 0
                        ::state/ownerships {}
-                       ::state/players ["player1" "player2"]
+                       ::state/players ["player1" 
+                                        "player2"]
+                       ::state/reserves {"player1" 0
+                                         "player2" 0}
                        ::state/territories #{}}]
     (test/is
       (spec/valid? 
@@ -75,6 +78,14 @@
             minimal-state
             ::state/players)))
       "spec should fail on a state with players key missing")
+    (test/is
+      (not
+        (spec/valid? 
+          ::state/state
+          (dissoc 
+            minimal-state
+            ::state/reserves)))
+      "spec should fail on a state with reserves key missing")
     (test/is
       (not
         (spec/valid? 
@@ -269,6 +280,18 @@
             ::state/ownerships {"territory1" "player3"}
             ::state/territories #{"territory1"})))
       "spec should fail on unknown players in ownerships")
+    (test/is
+      (not
+        (spec/valid? 
+          ::state/state
+          (assoc 
+            minimal-state
+            ::state/bonuses {"group1" 1}
+            ::state/garrisons {"territory1" 1}
+            ::state/groups {"group1" #{"territory1"}}
+            ::state/ownerships {"territory1" "player3"}
+            ::state/territories #{"territory1"})))
+      "spec should fail on unknown players in reserves")
     (test/is
       (not
         (spec/valid? 

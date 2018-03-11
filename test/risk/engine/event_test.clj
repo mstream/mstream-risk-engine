@@ -30,10 +30,15 @@
                       {:players #{"player1" "player2"}})]
       (and 
            (spec/valid? ::state/state new-state)
-           (= event/initial-state (assoc new-state ::state/players []))
+           (= event/initial-state (assoc 
+                                    new-state 
+                                    ::state/players []
+                                    ::state/reserves {}))
            (or 
                (= ["player1" "player2"] (::state/players new-state))
-               (= ["player2" "player1"] (::state/players new-state)))))
+               (= ["player2" "player1"] (::state/players new-state))
+               (= 42 (get (::state/reserves new-state) "player1"))
+               (= 42 (get (::state/reserves new-state) "player2")))))
     "should return initial state with shuffled player names"))
   
 

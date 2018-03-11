@@ -102,6 +102,7 @@
    ::state/moving-player-index 0
    ::state/ownerships {}
    ::state/players []
+   ::state/reserves {}
    ::state/territories #{"Afghanistan"
                          "Alaska"
                          "Argentina"
@@ -151,9 +152,18 @@
     (some? state) "can't start a new game when an old one is still being played"
     (< (count players) 2) "the game requires at least two players to play"
     (not= (count players) (count (set players))) "player names must be unique"
-    :else (assoc 
-            initial-state
-            ::state/players (vec (shuffle players)))))
+    :else (let [reserves (quot 
+                           (* 2 (count (vals (::state/territories initial-state))))
+                           (count players))]
+            (assoc 
+              initial-state
+              ::state/players (vec (shuffle players))
+              ::state/reserves (into 
+                                 {} 
+                                 (map 
+                                   (fn [player]
+                                     [player reserves]) 
+                                   players))))))
 
 
 (def event-handlers 
