@@ -66,6 +66,25 @@
     "player should not be able to attack from a territory not owned by them"))
         
 
+(test/deftest get-winner
+  (test/is 
+    (= "player1"
+       (query/get-winner
+         {::state/ownerships {"territory1" "player1"
+                              "territory2" "player1"}}))
+    "player wins if where no other player's territories")
+  (test/is 
+    (nil?
+       (query/get-winner
+         {::state/ownerships {"territory1" "player1"
+                              "territory2" "player2"}}))
+    "no one wins when there are territories owned by multiple players")
+  (test/is 
+    (nil?
+       (query/get-winner {}))
+    "no one wins when there are no owned territories"))
+
+
 (test/deftest reinforcement-size
   (test/is 
     (= 3

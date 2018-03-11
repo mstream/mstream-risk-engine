@@ -18,6 +18,7 @@
                      ::state/garrisons {} 
                      ::state/groups {}
                      ::state/ownerships {}
+                     ::state/players #{}
                      ::state/territories #{}}]
     (test/is
       (spec/valid? 
@@ -64,6 +65,14 @@
            empty-state
            ::state/ownerships)))
      "spec should fail on a state with ownerships key missing")
+    (test/is
+     (not
+       (spec/valid? 
+         ::state/state
+         (dissoc 
+           empty-state
+           ::state/players)))
+     "spec should fail on a state with players key missing")
     (test/is
      (not
        (spec/valid? 
@@ -221,7 +230,20 @@
             ::state/ownerships {"territory1" "player1"  
                                 "territory2" "player1"}
             ::state/territories #{"territory1"})))
-      "spec should fail on unknown territories in ownerships")))
+      "spec should fail on unknown territories in ownerships")
+    (test/is
+      (not
+        (spec/valid? 
+          ::state/state
+          (assoc 
+            empty-state
+            ::state/bonuses {"group1" 1}
+            ::state/garrisons {"territory1" 1}
+            ::state/groups {"group1" #{"territory1"}}
+            ::state/ownerships {"territory1" "player2"}
+            ::state/players #{"player1"}
+            ::state/territories #{"territory1"})))
+      "spec should fail on unknown players in ownerships")))
 
 
 

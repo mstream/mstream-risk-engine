@@ -24,6 +24,10 @@
                          :assigned string?)))
 
 
+(spec/def ::players
+  (spec/coll-of string?))
+
+
 (spec/def ::territories
   (spec/coll-of string?))
 
@@ -90,6 +94,18 @@
         groups))))
 
 
+(spec/def ::ownerships-include-only-known-players
+  (fn [{:keys [::ownerships ::players]}]
+    (every?
+      (partial
+        contains?
+        players)
+      (reduce
+        (fn [r x] (into r (second x)))
+        []
+        ownerships))))
+
+
 (spec/def ::state 
   (spec/and 
     (spec/keys :req [::bonuses
@@ -97,13 +113,15 @@
                      ::garrisons  
                      ::groups  
                      ::ownerships
+                     ::players
                      ::territories])
     ::territories-are-assigned-to-exactly-one-group
     ::groups-have-bonus-assigned
     ::territories-have-garrison-assigned
     ::owned-territories-have-at-least-one-army-in-its-garrison
     ::connections-include-only-known-territories
-    ::groups-include-only-known-territories))
+    ::groups-include-only-known-territories
+    ::ownerships-include-only-known-players))
 
 
 (def initial-state
@@ -203,6 +221,7 @@
                                "Peru"
                                "Venezuela"}}
    ::ownerships {}
+   ::players #{}
    ::territories #{"Afghanistan"
                    "Alaska"
                    "Argentina"
