@@ -1,7 +1,10 @@
 (ns risk.engine.core
   (:require [clojure.spec.alpha :as spec]
-            [cuerdas.core :as str]
-            [risk.engine.state :as state]))
+            [cuerdas.core :as str]))
+
+
+(spec/def ::state
+  (spec/map-of keyword? any?))
 
 
 (spec/def ::type keyword?)
@@ -18,7 +21,7 @@
 (spec/fdef event-handler
   :args (spec/cat
           :event-handlers ::event-handlers
-          :state ::state/state
+          :state ::state
           :event ::event)
   :ret int?)
 
@@ -33,7 +36,7 @@
 
 (spec/def ::result
   (spec/or 
-    :state ::state/state
+    :state ::state
     :failure ::failure))
 
 
@@ -44,7 +47,7 @@
 (spec/fdef handle-event
   :args (spec/cat
           :event-handlers ::event-handlers
-          :state ::state/state
+          :state ::state
           :event ::event)
   :ret ::event-handling-result)
 
