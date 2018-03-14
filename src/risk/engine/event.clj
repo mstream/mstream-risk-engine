@@ -1,5 +1,6 @@
 (ns risk.engine.event
   (:require [clojure.spec.alpha :as spec]
+            [risk.engine.core :as core]
             [risk.engine.state :as state]))
 
 
@@ -147,6 +148,13 @@
                          "Yakutsk"}})
 
 
+(spec/fdef game-started-handler
+  :args (spec/cat
+          :state ::state/state
+          :event ::event)
+  :ret ::core/event-handling-result)
+
+
 (defn game-started-handler [state {:keys [:players]}]
   (cond 
     (some? state) "can't start a new game when an old one is still being played"
@@ -166,5 +174,24 @@
                                    players))))))
 
 
+(spec/fdef territory-claimed-handler
+  :args (spec/cat
+          :state ::state/state
+          :event ::event)
+  :ret ::core/event-handling-result)
+
+
+(defn territory-claimed-handler [{:keys [::state/moving-player-index
+                                         ::state/ownerships
+                                         ::state/players] :as state} 
+                                 {:keys [:player :territory]}]
+  (cond 
+    (not (spec/valid? ::state/state state)) "state not valid"
+    (not= player (get players moving-player-index)) "not player's turn"
+    (some? (get ownerships territory)) "territory already claimed"
+    :else state))
+
+
 (def event-handlers 
-  {:game-started game-started-handler})
+  {:game-started game-started-handler
+   :territory-claimed territory-claimed-handler})

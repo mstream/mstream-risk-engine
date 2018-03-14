@@ -34,14 +34,10 @@
   string?)
 
 
-(spec/def ::result
+(spec/def ::event-handling-result
   (spec/or 
     :state ::state
     :failure ::failure))
-
-
-(spec/def ::event-handling-result
-  (spec/keys :req [::result]))
   
 
 (spec/fdef handle-event

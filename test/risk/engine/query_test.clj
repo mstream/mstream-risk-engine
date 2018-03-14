@@ -7,11 +7,19 @@
 (test/deftest can-attack?
   (test/is 
     (query/can-attack?
-      {::state/connections {"territory1" #{"territory2"}}
+      {::state/bonuses {"group1" 1}
+       ::state/connections {"territory1" #{"territory2"}}
        ::state/garrisons {"territory1" 2
                           "territory2" 1} 
+       ::state/groups {"group1" #{"territory1" "territory2"}}
+       ::state/moving-player-index 0
        ::state/ownerships {"territory1" "player1"
-                           "territory2" "player2"}}
+                           "territory2" "player2"}
+       ::state/players ["player1" 
+                        "player2"]
+       ::state/reserves {"player1" 0
+                         "player2" 0}
+       ::state/territories #{"territory1" "territory2"}}
       "player1"
       "territory1"
       "territory2")
@@ -19,11 +27,40 @@
   (test/is 
     (not 
       (query/can-attack?
-        {::state/connections {"territory1" #{"territory3"}}
+        {::state/bonuses {"group1" 1}
+         ::state/connections {"territory1" #{"territory2"}}
          ::state/garrisons {"territory1" 2
                             "territory2" 1} 
+         ::state/groups {"group1" #{"territory1" "territory2"}}
+         ::state/moving-player-index 1
          ::state/ownerships {"territory1" "player1"
-                             "territory2" "player2"}}
+                             "territory2" "player2"}
+         ::state/players ["player1" 
+                          "player2"]
+         ::state/reserves {"player1" 0
+                           "player2" 0}
+         ::state/territories #{"territory1" "territory2"}}
+        "player1"
+        "territory1"
+        "territory2"))
+    "player should not be able to attack when it's not their turn")
+  (test/is 
+    (not 
+      (query/can-attack?
+        {::state/bonuses {"group1" 1}
+         ::state/connections {"territory1" #{}
+                              "territory2" #{}}
+         ::state/garrisons {"territory1" 2
+                            "territory2" 1} 
+         ::state/groups {"group1" #{"territory1" "territory2"}}
+         ::state/moving-player-index 0
+         ::state/ownerships {"territory1" "player1"
+                             "territory2" "player2"}
+         ::state/players ["player1" 
+                          "player2"]
+         ::state/reserves {"player1" 0
+                           "player2" 0}
+         ::state/territories #{"territory1" "territory2"}}
         "player1"
         "territory1"
         "territory2"))
@@ -31,23 +68,39 @@
   (test/is 
     (not 
       (query/can-attack?
-        {::state/connections {"territory1" #{"territory2"}}
+        {::state/bonuses {"group1" 1}
+         ::state/connections {"territory1" #{"territory2"}}
          ::state/garrisons {"territory1" 1
                             "territory2" 1} 
+         ::state/groups {"group1" #{"territory1" "territory2"}}
+         ::state/moving-player-index 0
          ::state/ownerships {"territory1" "player1"
-                             "territory2" "player2"}}
+                             "territory2" "player2"}
+         ::state/players ["player1" 
+                          "player2"]
+         ::state/reserves {"player1" 0
+                           "player2" 0}
+         ::state/territories #{"territory1" "territory2"}}
         "player1"
         "territory1"
         "territory2"))
-    "player should not be able to attack not gaving more than 1 armies")
+    "player should not be able to attack not having more than 1 armies")
   (test/is 
     (not 
       (query/can-attack?
-        {::state/connections {"territory1" #{"territory2"}}
+        {::state/bonuses {"group1" 1}
+         ::state/connections {"territory1" #{"territory2"}}
          ::state/garrisons {"territory1" 2
                             "territory2" 1} 
+         ::state/groups {"group1" #{"territory1" "territory2"}}
+         ::state/moving-player-index 0
          ::state/ownerships {"territory1" "player1"
-                             "territory2" "player1"}}
+                             "territory2" "player1"}
+         ::state/players ["player1" 
+                          "player2"]
+         ::state/reserves {"player1" 0
+                           "player2" 0}
+         ::state/territories #{"territory1" "territory2"}}
         "player1"
         "territory1"
         "territory2"))
@@ -55,11 +108,19 @@
   (test/is 
     (not 
       (query/can-attack?
-        {::state/connections {"territory1" #{"territory2"}}
+        {::state/bonuses {"group1" 1}
+         ::state/connections {"territory1" #{"territory2"}}
          ::state/garrisons {"territory1" 2
                             "territory2" 1} 
+         ::state/groups {"group1" #{"territory1" "territory2"}}
+         ::state/moving-player-index 0
          ::state/ownerships {"territory1" "player2"
-                             "territory2" "player2"}}
+                             "territory2" "player2"}
+         ::state/players ["player1" 
+                          "player2"]
+         ::state/reserves {"player1" 0
+                           "player2" 0}
+         ::state/territories #{"territory1" "territory2"}}
         "player1"
         "territory1"
         "territory2"))
@@ -70,18 +131,53 @@
   (test/is 
     (= "player1"
        (query/get-winner
-         {::state/ownerships {"territory1" "player1"
-                              "territory2" "player1"}}))
+         {::state/bonuses {"group1" 1}
+          ::state/connections {"territory1" #{}}
+          ::state/garrisons {"territory1" 1
+                             "territory2" 1} 
+          ::state/groups {"group1" #{"territory1" "territory2"}}
+          ::state/moving-player-index 0
+          ::state/ownerships {"territory1" "player1"
+                              "territory2" "player1"}
+          ::state/players ["player1" 
+                           "player2"]
+          ::state/reserves {"player1" 0
+                            "player2" 0}
+          ::state/territories #{"territory1" "territory2"}}))
     "player wins if where no other player's territories")
   (test/is 
     (nil?
        (query/get-winner
-         {::state/ownerships {"territory1" "player1"
-                              "territory2" "player2"}}))
+         {::state/bonuses {"group1" 1}
+          ::state/connections {"territory1" #{}}
+          ::state/garrisons {"territory1" 1
+                             "territory2" 1} 
+          ::state/groups {"group1" #{"territory1" "territory2"}}
+          ::state/moving-player-index 0
+          ::state/ownerships {"territory1" "player1"
+                              "territory2" "player2"}
+          ::state/players ["player1" 
+                           "player2"]
+          ::state/reserves {"player1" 0
+                            "player2" 0}
+          ::state/territories #{"territory1" "territory2"}}))
     "no one wins when there are territories owned by multiple players")
   (test/is 
     (nil?
-       (query/get-winner {}))
+       (query/get-winner
+         {::state/bonuses {"group1" 1}
+          ::state/connections {"territory1" #{}}
+          ::state/garrisons {"territory1" 1
+                             "territory2" 1} 
+          ::state/groups {"group1" #{"territory1" "territory2"}}
+          ::state/moving-player-index 0
+          ::state/ownerships {"territory1" "player1"
+                              "territory2" "player2"}
+          ::state/players ["player1" 
+                           "player2"]
+          ::state/reserves {"player1" 0
+                            "player2" 0}
+          ::state/territories #{"territory1" "territory2"}}))
     "no one wins when there are no owned territories"))
 
 
@@ -89,16 +185,64 @@
   (test/is 
     (= 3
        (query/reinforcement-size
-         {::state/bonuses {}
-          ::state/groups {}
-          ::state/ownerships {"territory1" "player1"}}
+         {::state/bonuses {"group1" 1}
+          ::state/connections {"territory1" #{}}
+          ::state/garrisons {"territory1" 1
+                             "territory2" 1} 
+          ::state/groups {"group1" #{"territory1" "territory2"}}
+          ::state/moving-player-index 0
+          ::state/ownerships {"territory1" "player1"}
+          ::state/players ["player1"
+                           "player2"]
+          ::state/reserves {"player1" 0
+                            "player2" 0}
+          ::state/territories #{"territory1" "territory2"}}
          "player1"))
     "player should get at least 3 armies of reinforcement, regardles of number of owned territories")
   (test/is 
     (= 4
        (query/reinforcement-size
-         {::state/bonuses {}
-          ::state/groups {}
+         {::state/bonuses {"group1" 1}
+          ::state/connections {"territory1" #{}
+                               "territory2" #{}
+                               "territory3" #{}
+                               "territory4" #{}
+                               "territory5" #{}
+                               "territory6" #{}
+                               "territory7" #{}
+                               "territory8" #{}
+                               "territory9" #{}
+                               "territory10" #{}
+                               "territory11" #{}
+                               "territory12" #{}
+                               "territory13" #{}}
+          ::state/garrisons {"territory1" 1
+                             "territory2" 1
+                             "territory3" 1
+                             "territory4" 1
+                             "territory5" 1
+                             "territory6" 1
+                             "territory7" 1
+                             "territory8" 1
+                             "territory9" 1
+                             "territory10" 1
+                             "territory11" 1
+                             "territory12" 1
+                             "territory13" 1} 
+          ::state/groups {"group1" #{"territory1" 
+                                     "territory2"
+                                     "territory3"
+                                     "territory4"
+                                     "territory5"
+                                     "territory6"
+                                     "territory7"
+                                     "territory8"
+                                     "territory9"
+                                     "territory10"
+                                     "territory11"
+                                     "territory12"
+                                     "territory13"}}
+          ::state/moving-player-index 0
           ::state/ownerships {"territory1" "player1"
                               "territory2" "player1"
                               "territory3" "player1"
@@ -110,59 +254,172 @@
                               "territory9" "player1"
                               "territory10" "player1"
                               "territory11" "player1"
-                              "territory12" "player1"}}
+                              "territory12" "player1"}
+          ::state/players ["player1"
+                           "player2"]
+          ::state/reserves {"player1" 0
+                            "player2" 0}
+          ::state/territories #{"territory1"
+                                "territory2"
+                                "territory3"
+                                "territory4"
+                                "territory5"
+                                "territory6"
+                                "territory7"
+                                "territory8"
+                                "territory9"
+                                "territory10"
+                                "territory11"
+                                "territory12"
+                                "territory13"}}
          "player1"))
     "player should get 1 army for each three owned territories")
   (test/is 
     (= 4
        (query/reinforcement-size
-         { ::state/ownerships {"territory1" "player1"
-                               "territory2" "player1"
-                               "territory3" "player1"
-                               "territory4" "player1"
-                               "territory5" "player1"
-                               "territory6" "player1"
-                               "territory7" "player1"
-                               "territory8" "player1"
-                               "territory9" "player1"
-                               "territory10" "player1"
-                               "territory11" "player1"
-                               "territory12" "player1"
-                               "territory13" "player1"
-                               "territory14" "player1"}}
+         {::state/bonuses {"group1" 1}
+          ::state/connections {"territory1" #{}
+                               "territory2" #{}
+                               "territory3" #{}
+                               "territory4" #{}
+                               "territory5" #{}
+                               "territory6" #{}
+                               "territory7" #{}
+                               "territory8" #{}
+                               "territory9" #{}
+                               "territory10" #{}
+                               "territory11" #{}
+                               "territory12" #{}
+                               "territory13" #{}
+                               "territory14" #{}
+                               "territory15" #{}}
+          ::state/garrisons {"territory1" 1
+                             "territory2" 1
+                             "territory3" 1
+                             "territory4" 1
+                             "territory5" 1
+                             "territory6" 1
+                             "territory7" 1
+                             "territory8" 1
+                             "territory9" 1
+                             "territory10" 1
+                             "territory11" 1
+                             "territory12" 1
+                             "territory13" 1
+                             "territory14" 1
+                             "territory15" 1} 
+          ::state/groups {"group1" #{"territory1" 
+                                     "territory2"
+                                     "territory3"
+                                     "territory4"
+                                     "territory5"
+                                     "territory6"
+                                     "territory7"
+                                     "territory8"
+                                     "territory9"
+                                     "territory10"
+                                     "territory11"
+                                     "territory12"
+                                     "territory13"
+                                     "territory14"
+                                     "territory15"}}
+          ::state/moving-player-index 0
+          ::state/ownerships {"territory1" "player1"
+                              "territory2" "player1"
+                              "territory3" "player1"
+                              "territory4" "player1"
+                              "territory5" "player1"
+                              "territory6" "player1"
+                              "territory7" "player1"
+                              "territory8" "player1"
+                              "territory9" "player1"
+                              "territory10" "player1"
+                              "territory11" "player1"
+                              "territory12" "player1"
+                              "territory13" "player1"
+                              "territory14" "player1"}
+          ::state/players ["player1"
+                           "player2"]
+          ::state/reserves {"player1" 0
+                            "player2" 0}
+          ::state/territories #{"territory1"
+                                "territory2"
+                                "territory3"
+                                "territory4"
+                                "territory5"
+                                "territory6"
+                                "territory7"
+                                "territory8"
+                                "territory9"
+                                "territory10"
+                                "territory11"
+                                "territory12"
+                                "territory13"
+                                "territory14"
+                                "territory15"}}
          "player1"))
     "the number of received armies is rounded down if the number of owned territories is not divisible by 3")
   (test/is 
     (= 10
        (query/reinforcement-size
          {::state/bonuses {"group1" 10}
-          ::state/groups {"group1" #{"territory1" "territory2"}}
-          ::state/ownerships {"territory1" "player1"
-                              "territory2" "player1"}}
+          ::state/connections {"territory1" #{}}
+          ::state/garrisons {"territory1" 1} 
+          ::state/groups {"group1" #{"territory1"}}
+          ::state/moving-player-index 0
+          ::state/ownerships {"territory1" "player1"}
+          ::state/players ["player1"
+                           "player2"]
+          ::state/reserves {"player1" 0
+                            "player2" 0}
+          ::state/territories #{"territory1"}}
          "player1"))
-    "player gets bonus armies of the group of which they
-own all the territories")
+    "player gets bonus armies of the group of which they own all the territories")
   (test/is 
     (= 11
        (query/reinforcement-size
          {::state/bonuses {"group1" 10}
-          ::state/groups {"group1" #{"territory1" "territory2"}}
+          ::state/connections {"territory1" #{}
+                               "territory2" #{}
+                               "territory3" #{}}
+          ::state/garrisons {"territory1" 1
+                             "territory2" 1
+                             "territory3" 1} 
+          ::state/groups {"group1" #{"territory1" 
+                                     "territory2"
+                                     "territory3"}}
+          ::state/moving-player-index 0
           ::state/ownerships {"territory1" "player1"
                               "territory2" "player1"
-                              "territory3" "player1"}}
+                              "territory3" "player1"}
+          ::state/players ["player1"
+                           "player2"]
+          ::state/reserves {"player1" 0
+                            "player2" 0}
+          ::state/territories #{"territory1" 
+                                "territory2"
+                                "territory3"}}
          "player1"))
     "group bonuses are added to the number of armies for owned territories")
   (test/is 
-    (= 31
+    (= 30
        (query/reinforcement-size
          {::state/bonuses {"group1" 10
                            "group2" 20}
-          ::state/groups {"group1" #{"territory1" "territory2"}
-                          "group2" #{"territory3" "territory4"}}
+          ::state/connections {"territory1" #{}}
+          ::state/garrisons {"territory1" 1
+                             "territory2" 1} 
+          ::state/groups {"group1" #{"territory1"}
+                          "group2" #{"territory2"}}
+          ::state/moving-player-index 0
           ::state/ownerships {"territory1" "player1"
-                              "territory2" "player1"
-                              "territory3" "player1"
-                              "territory4" "player1"}}
+                              "territory2" "player1"}
+          ::state/players ["player1"
+                           "player2"]
+          ::state/reserves {"player1" 0
+                            "player2" 0}
+          ::state/territories #{"territory1"
+                                "territory2"}}
          "player1"))
     "player can get more than one group bonus"))
 

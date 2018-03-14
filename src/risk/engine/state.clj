@@ -11,7 +11,7 @@
 
 
 (spec/def ::garrisons 
-  (spec/map-of string? (spec/and int? (complement pos?))))
+  (spec/map-of string? (spec/and int? (complement neg?))))
 
 
 (spec/def ::groups 
@@ -19,7 +19,7 @@
 
 
 (spec/def ::moving-player-index 
-  (spec/and int? (complement pos?)))
+  (spec/and int? (complement neg?)))
 
 
 (spec/def ::ownership 
@@ -60,6 +60,11 @@
 (spec/def ::groups-have-bonus-assigned
   (fn [{:keys [::groups ::bonuses]}]
     (= (keys groups) (keys bonuses))))
+
+
+(spec/def ::territories-have-connections-assgined
+  (fn [{:keys [::territories ::connections]}]
+    (= territories (set (keys connections)))))
 
 
 (spec/def ::territories-have-garrison-assigned
@@ -111,10 +116,7 @@
       (partial
         contains?
         (set players))
-      (reduce
-        (fn [r x] (into r (second x)))
-        []
-        ownerships))))
+      (vals ownerships))))
 
 
 (spec/def ::reserves-include-only-known-players
@@ -123,7 +125,7 @@
       (partial
         contains?
         (set players))
-      (keys reserves))))
+      (keys reserves)))) 
 
 
 (spec/def ::state 
@@ -139,6 +141,7 @@
                      ::territories])
     ::territories-are-assigned-to-exactly-one-group
     ::groups-have-bonus-assigned
+    ::territories-have-garrison-assigned
     ::territories-have-garrison-assigned
     ::owned-territories-have-at-least-one-army-in-its-garrison
     ::connections-include-only-known-territories
