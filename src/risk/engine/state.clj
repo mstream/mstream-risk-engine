@@ -2,8 +2,31 @@
   (:require [clojure.spec.alpha :as spec]))
 
 
+(def min-garrison
+  1)
+
+
+(spec/def ::player
+  string?)
+
+
+(spec/def ::territory
+  string?)
+
+
 (spec/def ::bonuses 
   (spec/map-of string? int?))
+
+
+(spec/def ::claim
+  (spec/coll-of 
+    ::territory
+    ::kind vector?
+    ::distinct true))
+
+
+(spec/def ::claims 
+  (spec/map-of ::player ::claim))
 
 
 (spec/def ::connections 
@@ -11,7 +34,9 @@
 
 
 (spec/def ::garrisons 
-  (spec/map-of string? (spec/and int? (complement neg?))))
+  (spec/map-of string? (spec/and 
+                         int? 
+                         (complement neg?))))
 
 
 (spec/def ::groups 
@@ -19,18 +44,25 @@
 
 
 (spec/def ::moving-player-index 
-  (spec/and int? (complement neg?)))
+  (spec/or
+    :none nil?
+    :index (spec/and 
+             int? 
+             (complement neg?))))
 
 
-(spec/def ::ownership 
+(spec/def ::ownerships 
   (spec/map-of string? (spec/or 
-                         :unassigned nil? 
-                         :assigned string?)))
+                         :unowned nil? 
+                         :owned string?)))
 
 
 (spec/def ::players
   (spec/and
-    (spec/coll-of string?)
+    (spec/coll-of 
+      ::player
+      :kind vector?
+      :distinct true)    
     #(> (count %) 1)))
 
 
@@ -41,7 +73,7 @@
 
 
 (spec/def ::territories
-  (spec/coll-of string?))
+  (spec/coll-of ::territory))
 
 
 (spec/def ::territories-are-assigned-to-exactly-one-group
@@ -72,6 +104,11 @@
     (= territories (set (keys garrisons)))))
 
 
+(spec/def ::territories-have-ownership-assigned
+  (fn [{:keys [::territories ::ownerships]}]
+    (= territories (set (keys ownerships)))))
+
+
 (spec/def ::owned-territories-have-at-least-one-army-in-its-garrison
   (fn [{:keys [::ownerships ::garrisons]}]
     (every? 
@@ -81,7 +118,7 @@
       (keys
         (filter 
           (comp 
-            (partial some?)
+            (partial = :owned)
             second)
           ownerships)))))
 
@@ -116,7 +153,12 @@
       (partial
         contains?
         (set players))
-      (vals ownerships))))
+      (filter
+        some?
+        (map 
+          (comp second second)
+          ownerships)))))
+          
 
 
 (spec/def ::reserves-include-only-known-players
@@ -126,6 +168,29 @@
         contains?
         (set players))
       (keys reserves)))) 
+
+
+(spec/def ::moving-player-index-in-bound
+  (fn [{:keys [::moving-player-index ::players]}]
+    (let [[type index] moving-player-index]
+      (or (= :none type)
+          (< index (count players))))))
+
+
+(spec/def ::enough-unclaimed-territories-during-distribution-phase
+  (fn [{:keys [::garrisons
+               ::ownerships
+               ::players
+               ::territories]}]
+    (let [unclaimed-territories-cnt (count (filter 
+                                             (fn [territory]
+                                               (and 
+                                                    (= :unowned (first (get ownerships territory)))
+                                                    (zero? (get garrisons territory))))
+                                             territories))]
+      (or
+          (zero? unclaimed-territories-cnt)
+          (>= unclaimed-territories-cnt (count players))))))
 
 
 (spec/def ::state 
@@ -138,14 +203,17 @@
                      ::ownerships
                      ::players
                      ::reserves
-                     ::territories])
+                     ::territories]
+               :opt [::claims])
     ::territories-are-assigned-to-exactly-one-group
     ::groups-have-bonus-assigned
     ::territories-have-garrison-assigned
-    ::territories-have-garrison-assigned
+    ::territories-have-ownership-assigned
     ::owned-territories-have-at-least-one-army-in-its-garrison
     ::connections-include-only-known-territories
     ::groups-include-only-known-territories
     ::ownerships-include-only-known-players
-    ::reserves-include-only-known-players))
+    ::reserves-include-only-known-players
+    ::moving-player-index-in-bound
+    ::enough-unclaimed-territories-during-distribution-phase))
     

@@ -1,6 +1,14 @@
 (ns risk.engine.query
   (:require [clojure.spec.alpha :as spec]
+            [cuerdas.core :as str]
             [risk.engine.state :as state]))
+
+
+(defn- validate-state [state]
+  (when-not (spec/valid? ::state/state state)
+    (throw (IllegalArgumentException. (str/format 
+                                        "invalid state: %s"
+                                        (spec/explain-str ::state/state state))))))
 
 
 (spec/fdef get-winner
@@ -9,8 +17,7 @@
 
 
 (defn get-winner [{:keys [::state/ownerships] :as state}]
-  (when-not (spec/valid? ::state/state state)
-    (throw (IllegalArgumentException. "invalid state")))
+  (validate-state state)
   (let [owners (set (filter 
                       some? 
                       (vals ownerships)))]
@@ -34,8 +41,7 @@
                            ::state/ownerships
                            ::state/players] :as state}
                    player from to]
-  (when-not (spec/valid? ::state/state state)
-    (throw (IllegalArgumentException. "invalid state")))
+  (validate-state state)
   (and (= player (get players moving-player-index))
        (contains? (get connections from) to)
        (= player (get ownerships from))
@@ -54,8 +60,7 @@
                                   ::state/groups 
                                   ::state/ownerships] :as state} 
                           player]
-  (when-not (spec/valid? ::state/state state)
-    (throw (IllegalArgumentException. "invalid state")))
+  (validate-state state)
   (let [owned-territories (set (map
                                  first
                                  (filter 
@@ -73,6 +78,33 @@
                             second) 
                           groups))))))))
 
+
+(spec/fdef can-claim-territory?
+  :args (spec/cat 
+          :state ::state/state?
+          :territory string?)
+  :ret boolean?)
+
+
+(defn can-claim-territory? [{:keys [::state/garrisons 
+                                    ::state/ownerships] :as state}
+                            territory]
+  (validate-state state)
+  (and
+       (nil? (get ownerships territory))
+       (zero? (get garrisons territory))))
+
+
+(spec/fdef in-distribution-phase?
+  :args (spec/cat :state ::state/state?)
+  :ret boolean?)
+
+
+(defn in-distribution-phase? [{:keys [::state/moving-player-index
+                                      ::state/territories] :as state}]
+  (validate-state state)
+  (and (nil? moving-player-index)
+       (some (partial can-claim-territory? state) territories)))
 
 
 
