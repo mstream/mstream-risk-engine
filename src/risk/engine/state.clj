@@ -43,12 +43,23 @@
   (spec/map-of string? (spec/coll-of string?)))
 
 
-(spec/def ::moving-player-index 
-  (spec/or
-    :none nil?
-    :index (spec/and 
-             int? 
-             (complement neg?))))
+(spec/def ::quantity
+  (spec/and 
+    int?
+    pos?))
+
+
+(spec/def ::dispatchments
+  (spec/map-of ::territory ::quantity))
+
+
+(spec/def ::order
+  (spec/keys :req [::dispatchments
+                   ::movements]))
+
+
+(spec/def ::orders 
+  (spec/map-of ::player ::order))
 
 
 (spec/def ::ownerships 
@@ -170,13 +181,6 @@
       (keys reserves)))) 
 
 
-(spec/def ::moving-player-index-in-bound
-  (fn [{:keys [::moving-player-index ::players]}]
-    (let [[type index] moving-player-index]
-      (or (= :none type)
-          (< index (count players))))))
-
-
 (spec/def ::enough-unclaimed-territories-during-distribution-phase
   (fn [{:keys [::garrisons
                ::ownerships
@@ -199,12 +203,12 @@
                      ::connections 
                      ::garrisons  
                      ::groups  
-                     ::moving-player-index
                      ::ownerships
                      ::players
                      ::reserves
                      ::territories]
-               :opt [::claims])
+               :opt [::claims
+                     ::orders])
     ::territories-are-assigned-to-exactly-one-group
     ::groups-have-bonus-assigned
     ::territories-have-garrison-assigned
@@ -214,6 +218,5 @@
     ::groups-include-only-known-territories
     ::ownerships-include-only-known-players
     ::reserves-include-only-known-players
-    ::moving-player-index-in-bound
     ::enough-unclaimed-territories-during-distribution-phase))
     

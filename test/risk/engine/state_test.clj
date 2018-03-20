@@ -13,7 +13,6 @@
         {::state/connections {}
          ::state/garrisons {} 
          ::state/groups {}
-         ::state/moving-player-index 0
          ::state/ownerships {}
          ::state/players []
          ::state/reserves {}
@@ -26,7 +25,6 @@
         {::state/bonuses {}
          ::state/garrisons {} 
          ::state/groups {}
-         ::state/moving-player-index 0
          ::state/ownerships {}
          ::state/players []
          ::state/reserves {}
@@ -39,7 +37,6 @@
         {::state/bonuses {}
          ::state/connections {}
          ::state/groups {}
-         ::state/moving-player-index 0
          ::state/ownerships {}
          ::state/players []
          ::state/reserves {}
@@ -52,7 +49,6 @@
         {::state/bonuses {}
          ::state/connections {}
          ::state/garrisons {} 
-         ::state/moving-player-index 0
          ::state/ownerships {}
          ::state/players []
          ::state/reserves {}
@@ -66,20 +62,6 @@
          ::state/connections {}
          ::state/garrisons {} 
          ::state/groups {}
-         ::state/ownerships {}
-         ::state/players []
-         ::state/reserves {}
-         ::state/territories #{}}))
-    "spec should fail on a state with moving-player-index key missing")
-  (test/is
-    (not
-      (spec/valid? 
-        ::state/state
-        {::state/bonuses {}
-         ::state/connections {}
-         ::state/garrisons {} 
-         ::state/groups {}
-         ::state/moving-player-index 0
          ::state/players []
          ::state/reserves {}
          ::state/territories #{}}))
@@ -92,7 +74,6 @@
          ::state/connections {}
          ::state/garrisons {} 
          ::state/groups {}
-         ::state/moving-player-index 0
          ::state/ownerships {}
          ::state/reserves {}
          ::state/territories #{}}))
@@ -105,7 +86,6 @@
          ::state/connections {}
          ::state/garrisons {} 
          ::state/groups {}
-         ::state/moving-player-index 0
          ::state/ownerships {}
          ::state/players []
          ::state/territories #{}}))
@@ -118,7 +98,6 @@
          ::state/connections {}
          ::state/garrisons {} 
          ::state/groups {}
-         ::state/moving-player-index 0
          ::state/ownerships {}
          ::state/players []
          ::state/reserves {}}))
@@ -131,7 +110,6 @@
          ::state/connections {"territory1" #{}}
          ::state/garrisons {"territory1" 1} 
          ::state/groups {"group1" #{"territory1"}}
-         ::state/moving-player-index 0
          ::state/ownerships {"territory1" "player1"}
          ::state/players ["player1"]
          ::state/reserves {"player1" 0}
@@ -145,7 +123,6 @@
          ::state/connections {"territory1" #{}}
          ::state/garrisons {"territory1" 1} 
          ::state/groups {"group1" #{"territory1"}}
-         ::state/moving-player-index 0
          ::state/ownerships {"territory1" "player1"}
          ::state/players ["player1"]
          ::state/reserves {"player1" 0}
@@ -159,7 +136,6 @@
          ::state/connections {"territory1" #{}}
          ::state/garrisons {"territory1" ""} 
          ::state/groups {"group1" #{"territory1"}}
-         ::state/moving-player-index 0
          ::state/ownerships {"territory1" "player1"}
          ::state/players ["player1"]
          ::state/reserves {"player1" 0}
@@ -173,7 +149,6 @@
          ::state/connections {"territory1" #{}}
          ::state/garrisons {"territory1" -1} 
          ::state/groups {"group1" #{"territory1"}}
-         ::state/moving-player-index 0
          ::state/ownerships {"territory1" "player1"}
          ::state/players ["player1"]
          ::state/reserves {"player1" 0}
@@ -202,7 +177,6 @@
          ::state/garrisons {"territory1" 1} 
          ::state/groups {"group1" #{"territory1"}
                          "group2" #{"territory1"}}
-         ::state/moving-player-index 0
          ::state/ownerships {"territory1" "player1"}
          ::state/players ["player1"]
          ::state/reserves {"player1" 0}
@@ -216,7 +190,6 @@
          ::state/connections {"territory1" #{}}
          ::state/garrisons {"territory1" 1} 
          ::state/groups {"group1" #{"territory1"}}
-         ::state/moving-player-index 0
          ::state/ownerships {"territory1" "player1"}
          ::state/players ["player1"]
          ::state/reserves {"player1" 0}
@@ -230,7 +203,6 @@
          ::state/connections {}
          ::state/garrisons {"territory1" 1} 
          ::state/groups {"group1" #{"territory1"}}
-         ::state/moving-player-index 0
          ::state/ownerships {"territory1" "player1"}
          ::state/players ["player1"]
          ::state/reserves {"player1" 0}
@@ -244,7 +216,6 @@
          ::state/connections {"territory1" #{}}
          ::state/garrisons {"territory1" state/min-garrison} 
          ::state/groups {"group1" #{"territory1"}}
-         ::state/moving-player-index 0
          ::state/ownerships {"territory1" "player1"}
          ::state/players ["player1"]
          ::state/reserves {"player1" 0}
@@ -274,7 +245,6 @@
                               "territory2" #{}}
          ::state/garrisons {"territory1" 1} 
          ::state/groups {"group1" #{"territory1"}}
-         ::state/moving-player-index 0
          ::state/ownerships {"territory1" "player1"}
          ::state/players ["player1"]
          ::state/reserves {"player1" 0}
@@ -288,7 +258,6 @@
          ::state/connections {"territory1" #{"territory2"}}
          ::state/garrisons {"territory1" 1} 
          ::state/groups {"group1" #{"territory1"}}
-         ::state/moving-player-index 0
          ::state/ownerships {"territory1" "player1"}
          ::state/players ["player1"]
          ::state/reserves {"player1" 0}
@@ -303,7 +272,6 @@
          ::state/garrisons {"territory1" 1
                             "territory2" 1} 
          ::state/groups {"group1" #{"territory1"}}
-         ::state/moving-player-index 0
          ::state/ownerships {"territory1" "player1"}
          ::state/players ["player1"]
          ::state/reserves {"player1" 0}
@@ -318,7 +286,6 @@
          ::state/garrisons {"territory1" 1} 
          ::state/groups {"group1" #{"territory1" 
                                     "territory2"}}
-         ::state/moving-player-index 0
          ::state/ownerships {"territory1" "player1"}
          ::state/players ["player1"]
          ::state/reserves {"player1" 0}
@@ -332,7 +299,6 @@
          ::state/connections {"territory1" #{}}
          ::state/garrisons {"territory1" 1} 
          ::state/groups {"group1" #{"territory1"}}
-         ::state/moving-player-index 0
          ::state/ownerships {"territory1" "player1"
                              "territory2" "player1"}
          ::state/players ["player1"]
@@ -347,7 +313,6 @@
          ::state/connections {"territory1" #{}}
          ::state/garrisons {"territory1" 1} 
          ::state/groups {"group1" #{"territory1"}}
-         ::state/moving-player-index 0
          ::state/ownerships {"territory1" "player2"}
          ::state/players ["player1"]
          ::state/reserves {"player1" 0}
@@ -361,7 +326,6 @@
          ::state/connections {"territory1" #{}}
          ::state/garrisons {"territory1" 1} 
          ::state/groups {"group1" #{"territory1"}}
-         ::state/moving-player-index 0
          ::state/ownerships {"territory1" "player1"}
          ::state/players ["player1"]
          ::state/reserves {"player1" 0
@@ -373,29 +337,12 @@
       (spec/valid? 
         ::state/state
         {::state/bonuses {"group1" 1}
-         ::state/connections {"territory1" #{}}
-         ::state/garrisons {"territory1" 1} 
-         ::state/groups {"group1" #{"territory1"}}
-         ::state/moving-player-index 2
-         ::state/ownerships {"territory1" "player1"}
-         ::state/players ["player1" 
-                          "player2"]
-         ::state/reserves {"player1" 0
-                           "player2" 0}
-         ::state/territories #{"territory1"}}))
-    "spec should fail on moving player index out of bound")
-  (test/is
-    (not
-      (spec/valid? 
-        ::state/state
-        {::state/bonuses {"group1" 1}
          ::state/connections {"territory1" #{}
                               "territory2" #{}}
          ::state/garrisons {"territory1" 1
                             "territory2" 0} 
          ::state/groups {"group1" #{"territory1"
                                     "territory2"}}
-         ::state/moving-player-index nil
          ::state/ownerships {"territory1" nil 
                              "territory2" nil}
          ::state/players ["player1" "player2"]

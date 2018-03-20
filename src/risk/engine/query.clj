@@ -37,13 +37,11 @@
 
 (defn can-attack? [{:keys [::state/connections 
                            ::state/garrisons 
-                           ::state/moving-player-index
                            ::state/ownerships
                            ::state/players] :as state}
                    player from to]
   (validate-state state)
-  (and (= player (get players moving-player-index))
-       (contains? (get connections from) to)
+  (and (contains? (get connections from) to)
        (= player (get ownerships from))
        (not= player (get ownerships to))
        (<= 2 (get garrisons from))))
@@ -103,8 +101,7 @@
 (defn in-distribution-phase? [{:keys [::state/moving-player-index
                                       ::state/territories] :as state}]
   (validate-state state)
-  (and (nil? moving-player-index)
-       (some (partial can-claim-territory? state) territories)))
+  (some (partial can-claim-territory? state) territories))
 
 
 

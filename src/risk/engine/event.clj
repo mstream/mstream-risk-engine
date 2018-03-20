@@ -125,49 +125,48 @@
                                      "Brazil"
                                      "Peru"
                                      "Venezuela"}}
-   ::state/moving-player-index 0
    ::state/ownerships {"Afghanistan" nil
-                         "Alaska" nil
-                         "Argentina" nil
-                         "Brazil" nil
-                         "Central Africa" nil
-                         "Central America" nil
-                         "Central Canada" nil
-                         "China" nil
-                         "East Africa" nil
-                         "Eastern Australia" nil
-                         "Eastern Canada" nil
-                         "Eastern Europe" nil
-                         "Eastern United States" nil
-                         "Egypt" nil
-                         "Great Britain & Ireland" nil
-                         "Greenland" nil
-                         "Hindustan" nil
-                         "Iceland" nil
-                         "Indonesia" nil
-                         "Irkutks" nil
-                         "Japan" nil
-                         "Kamchatka" nil
-                         "Madagascar" nil
-                         "Middle East" nil
-                         "Mongolia" nil
-                         "New Guinea" nil
-                         "North Africa" nil
-                         "Northern Europe" nil
-                         "Northwest Territory" nil
-                         "Peru" nil
-                         "Scandinavia" nil
-                         "Siberia" nil
-                         "South Africa" nil
-                         "Southeast Asia" nil
-                         "Southern Europe" nil
-                         "Ural" nil
-                         "Venezuela" nil
-                         "Western Australia" nil
-                         "Western Canada" nil
-                         "Western Europe" nil
-                         "Western United States" nil
-                         "Yakutsk" nil}
+                       "Alaska" nil
+                       "Argentina" nil
+                       "Brazil" nil
+                       "Central Africa" nil
+                       "Central America" nil
+                       "Central Canada" nil
+                       "China" nil
+                       "East Africa" nil
+                       "Eastern Australia" nil
+                       "Eastern Canada" nil
+                       "Eastern Europe" nil
+                       "Eastern United States" nil
+                       "Egypt" nil
+                       "Great Britain & Ireland" nil
+                       "Greenland" nil
+                       "Hindustan" nil
+                       "Iceland" nil
+                       "Indonesia" nil
+                       "Irkutks" nil
+                       "Japan" nil
+                       "Kamchatka" nil
+                       "Madagascar" nil
+                       "Middle East" nil
+                       "Mongolia" nil
+                       "New Guinea" nil
+                       "North Africa" nil
+                       "Northern Europe" nil
+                       "Northwest Territory" nil
+                       "Peru" nil
+                       "Scandinavia" nil
+                       "Siberia" nil
+                       "South Africa" nil
+                       "Southeast Asia" nil
+                       "Southern Europe" nil
+                       "Ural" nil
+                       "Venezuela" nil
+                       "Western Australia" nil
+                       "Western Canada" nil
+                       "Western Europe" nil
+                       "Western United States" nil
+                       "Yakutsk" nil}
    ::state/players []
    ::state/reserves {}
    ::state/territories #{"Afghanistan"
@@ -251,19 +250,16 @@
                                    players))))))
 
 
+(spec/def ::claim
+  ::state/claim)
+
+
 (spec/def ::player
   ::state/player)
 
 
-(spec/def ::territory-preference
-  (spec/coll-of 
-    ::state/territory 
-    :kind vector? 
-    :distinct true))
-
-
 (spec/def ::territories-claimed-handler-event-data
-  (spec/keys :req [::player ::territory-preference]))
+  (spec/keys :req [::player ::claim]))
 
 
 (spec/fdef territories-claimed-handler
@@ -294,44 +290,154 @@
 
 
 (defn territories-claimed-handler [{:keys [::state/claims
-                                           ::state/moving-player-index
                                            ::state/ownerships
                                            ::state/players
                                            ::state/territories] :as state} 
-                                   {:keys [::player ::territory-preference] :as event-data}]
+                                   {:keys [::player ::claim] :as event-data}]
   (validate-state state)
   (validate-event-data ::territories-claimed-handler-event-data event-data)
   (cond 
     (not (query/in-distribution-phase? state)) "not in the distribution phase"
     (not (some (partial = player) players)) "unknown player"
-    (not (every? (partial contains? territories) territory-preference)) "unknown territory"
-    (some (comp not (partial query/can-claim-territory? state)) territory-preference) "territory can't be claimed"
+    (not (every? (partial contains? territories) claim)) "unknown territory"
+    (some (comp not (partial query/can-claim-territory? state)) claim) "territory can't be claimed"
     (some? (get claims player)) "claim already made"
-    :else (if (not= (count claims) (dec (count players)))
-            (assoc-in 
-              state 
-              [::state/claims player]
-              territory-preference)
-            (-> state
-                (dissoc ::state/claims)
-                (assoc ::state/garrisons {"territory1" state/min-garrison
-                                          "territory2" state/min-garrison
-                                          "territory3" neutral-territory-garrison
-                                          "territory4" state/min-garrison}
-                       ::state/moving-player-index 0
-                       ::state/ownerships (merge 
-                                            ownerships 
-                                            (calculate-ownerships
-                                              (assoc 
-                                                claims
-                                                player
-                                                territory-preference)
-                                              territories))
-                       ::state/reserves {"player1" initial-reserves
-                                         "player2" initial-reserves
-                                         "player3" initial-reserves})))))
+    (not= (count claims) 
+          (dec (count players))) (assoc-in 
+                                   state 
+                                   [::state/claims player]
+                                   claim)
+    :else (-> state
+              (dissoc ::state/claims)
+              (assoc ::state/garrisons {"territory1" state/min-garrison
+                                        "territory2" state/min-garrison
+                                        "territory3" neutral-territory-garrison
+                                        "territory4" state/min-garrison}
+                ::state/ownerships (merge 
+                                     ownerships 
+                                     (calculate-ownerships
+                                       (assoc 
+                                         claims
+                                         player
+                                         claim)
+                                       territories))
+                ::state/reserves {"player1" initial-reserves
+                                  "player2" initial-reserves
+                                  "player3" initial-reserves}))))
+
+
+(spec/def ::territory
+  ::state/territory)
+
+
+(spec/def ::quantity
+  (spec/and 
+    int?
+    pos?))
+
+
+(spec/def ::dispatchments
+  (spec/map-of ::territory ::quantity))
+
+
+(spec/def ::from 
+  ::state/territory)
+
+
+(spec/def ::to
+  ::state/territory)
+
+
+(spec/def ::movement
+  (spec/keys :req [::from 
+                   ::to 
+                   ::quantity]))
+
+
+(spec/def ::movements
+  (spec/coll-of 
+    ::movement
+    :kind vector?
+    :distinct true))
+
+
+(spec/def ::orders
+  ::state/orders)
+
+
+(spec/def ::orders-dispatched-handler-event-data
+  (spec/keys :req [::player 
+                   ::dispatchments 
+                   ::movements]))
+
+
+(spec/fdef orders-dispatched-handler
+  :args (spec/cat
+          :state ::state/state
+          :event ::orders-dispatched-handler-event-data)
+  :ret ::core/event-handling-result)
+
+
+(defn orders-dispatched-handler [{:keys [::state/garrisons
+                                         ::state/orders
+                                         ::state/ownerships
+                                         ::state/players
+                                         ::state/reserves
+                                         ::state/territories] :as state} 
+                                 {:keys [::player 
+                                         ::dispatchments
+                                         ::movements] :as event-data}]
+  (validate-state state)
+  (validate-event-data ::orders-dispatched-handler-event-data event-data)
+  (cond 
+    (query/in-distribution-phase? state) "not in the orders phase"
+    (not (some 
+           (partial = player) 
+           players)) "unknown player"
+    (some 
+      (comp 
+        not 
+        (partial contains? territories)) 
+      (flatten [(map first dispatchments) 
+                (map ::from movements) 
+                (map ::to movements)])) "unknown territory"
+    (some 
+      (comp 
+        (partial not= player)
+        (partial get ownerships)) 
+      (flatten [(map first dispatchments)
+                (map ::from movements)])) "not owned territory"
+    (> 
+       (apply + (map second dispatchments))
+       (get reserves player)) "not enough reserves"
+    (some 
+      (partial > state/min-garrison) 
+      (map 
+        (fn [movement] (- 
+                          (get garrisons (::from movement))
+                          (::quantity movement))) 
+        movements)) "not enough armies"
+    (not= (count orders) 
+          (dec (count players))) (assoc-in 
+                                   state 
+                                   [::state/orders player]
+                                   {::state/dispatchments dispatchments
+                                    ::state/movements (mapv 
+                                                        (fn [{:keys [::from 
+                                                                     ::to 
+                                                                     ::quantity]}]
+                                                          {::state/from from 
+                                                           ::state/to to
+                                                           ::state/quantity quantity})
+                                                        movements)})
+    :else (update 
+            ::garrisons 
+            (fn [garrisons] 
+              (hash-map (for [[territory armies] garrisons]
+                          [territory ((fnil + 0) (get dispatchments territory) (get garrisons territory))]))))))
 
 
 (def event-handlers 
   {:game-started game-started-handler
-   :territories-claimed territories-claimed-handler})
+   :territories-claimed territories-claimed-handler
+   :orders-dispatched orders-dispatched-handler})
