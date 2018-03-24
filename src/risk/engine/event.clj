@@ -1,6 +1,6 @@
 (ns risk.engine.event
   (:require [clojure.set :as sets]
-            [clojure.spec.alpha :as spec]            
+            [clojure.spec.alpha :as spec]
             [cuerdas.core :as str]
             [risk.engine.core :as core]
             [risk.engine.query :as query]
@@ -21,11 +21,11 @@
                                         (spec/explain-str event-data-spec event-data))))))
 
 
-(def neutral-territory-garrison 
+(def neutral-territory-garrison
   1)
 
 
-(def initial-reserves 
+(def initial-reserves
   3)
 
 
@@ -36,7 +36,7 @@
                     "Europe" 5
                     "North America" 5
                     "South America" 2}
-   ::state/connections {"Eastern Australia" #{"Western Australia" 
+   ::state/connections {"Eastern Australia" #{"Western Australia"
                                               "New Guinea"}
                         "Western Australia" #{"Eastern Australia"
                                               "Indonesia"
@@ -82,7 +82,7 @@
                       "Western Canada" 0
                       "Western Europe" 0
                       "Western United States" 0
-                      "Yakutsk" 0} 
+                      "Yakutsk" 0}
    ::state/groups {"Africa" #{"Central Africa"
                               "East Africa"
                               "Egypt"
@@ -214,9 +214,9 @@
 
 
 (spec/def ::players
-  (spec/coll-of 
+  (spec/coll-of
     ::state/player
-    :kind set?))
+    :kind vector?))
 
 
 (spec/def ::game-started-handler-event-data
@@ -225,28 +225,36 @@
 
 (spec/fdef game-started-handler
   :args (spec/cat
-          :state ::state/state
+          :context ::state/context
           :event-data ::game-started-handler-event-data)
   :ret ::core/event-handling-result)
 
 
-(defn game-started-handler [state {:keys [::players] :as event-data}]
-  (cond 
+(defn game-started-handler [{state ::core/state
+                             {:keys [:rand-int]} ::core/coeffects}
+                            {:keys [::players] :as event-data}]
+  (cond
     (some? state) "can't start a new game when an old one is still being played"
+    (nil? rand-int) "rand-int function not provided"
     (not (spec/valid? ::game-started-handler-event-data event-data)) "event data not valid"
     (< (count players) 2) "the game requires at least two players to play"
     (not= (count players) (count (set players))) "player names must be unique"
-    :else (let [reserves (quot 
+    :else (let [reserves (quot
                            (* 2 (count (vals (::state/territories initial-state))))
                            (count players))]
-            (assoc 
+            (assoc
               initial-state
-              ::state/players (vec (shuffle players))
-              ::state/reserves (into 
-                                 {} 
-                                 (map 
+              ::state/players (vec (nth
+                                    (iterate
+                                     (fn [[first & rest]]
+                                       (conj (vec rest) first))
+                                     players)
+                                    (rand-int (count players))))
+              ::state/reserves (into
+                                 {}
+                                 (map
                                    (fn [player]
-                                     [player reserves]) 
+                                     [player reserves])
                                    players))))))
 
 
@@ -264,47 +272,47 @@
 
 (spec/fdef territories-claimed-handler
   :args (spec/cat
-          :state ::state/state
+          :context ::state/context
           :event ::territories-claimed-handler-event-data)
   :ret ::core/event-handling-result)
 
 
 (defn- calculate-ownerships [preferences territories]
   (sets/map-invert (reduce (fn [ownerships [player priority]]
-                             (assoc 
-                               ownerships 
+                             (assoc
+                               ownerships
                                player
-                               (first (filter 
+                               (first (filter
                                         (fn [territory]
-                                          (not (contains? 
+                                          (not (contains?
                                                  (set (vals ownerships))
                                                  territory)))
-                                        (into 
-                                          priority 
+                                        (into
+                                          priority
                                           (shuffle (sets/difference
                                                      (set priority)
                                                      (set territories))))))))
                      {}
                      preferences)))
-  
 
 
-(defn territories-claimed-handler [{:keys [::state/claims
-                                           ::state/ownerships
-                                           ::state/players
-                                           ::state/territories] :as state} 
+
+(defn territories-claimed-handler [{{:keys [::state/claims
+                                            ::state/ownerships
+                                            ::state/players
+                                            ::state/territories] :as state} ::core/state}
                                    {:keys [::player ::claim] :as event-data}]
   (validate-state state)
   (validate-event-data ::territories-claimed-handler-event-data event-data)
-  (cond 
+  (cond
     (not (query/in-distribution-phase? state)) "not in the distribution phase"
     (not (some (partial = player) players)) "unknown player"
     (not (every? (partial contains? territories) claim)) "unknown territory"
     (some (comp not (partial query/can-claim-territory? state)) claim) "territory can't be claimed"
     (some? (get claims player)) "claim already made"
-    (not= (count claims) 
-          (dec (count players))) (assoc-in 
-                                   state 
+    (not= (count claims)
+          (dec (count players))) (assoc-in
+                                   state
                                    [::state/claims player]
                                    claim)
     :else (-> state
@@ -313,10 +321,10 @@
                                         "territory2" state/min-garrison
                                         "territory3" neutral-territory-garrison
                                         "territory4" state/min-garrison}
-                ::state/ownerships (merge 
-                                     ownerships 
+                ::state/ownerships (merge
+                                     ownerships
                                      (calculate-ownerships
-                                       (assoc 
+                                       (assoc
                                          claims
                                          player
                                          claim)
@@ -331,7 +339,7 @@
 
 
 (spec/def ::quantity
-  (spec/and 
+  (spec/and
     int?
     pos?))
 
@@ -340,7 +348,7 @@
   (spec/map-of ::territory ::quantity))
 
 
-(spec/def ::from 
+(spec/def ::from
   ::state/territory)
 
 
@@ -349,13 +357,13 @@
 
 
 (spec/def ::movement
-  (spec/keys :req [::from 
-                   ::to 
+  (spec/keys :req [::from
+                   ::to
                    ::quantity]))
 
 
 (spec/def ::movements
-  (spec/coll-of 
+  (spec/coll-of
     ::movement
     :kind vector?
     :distinct true))
@@ -366,8 +374,8 @@
 
 
 (spec/def ::orders-dispatched-handler-event-data
-  (spec/keys :req [::player 
-                   ::dispatchments 
+  (spec/keys :req [::player
+                   ::dispatchments
                    ::movements]))
 
 
@@ -378,66 +386,66 @@
   :ret ::core/event-handling-result)
 
 
-(defn orders-dispatched-handler [{:keys [::state/garrisons
-                                         ::state/orders
-                                         ::state/ownerships
-                                         ::state/players
-                                         ::state/reserves
-                                         ::state/territories] :as state} 
-                                 {:keys [::player 
+(defn orders-dispatched-handler [{{:keys [::state/garrisons
+                                          ::state/orders
+                                          ::state/ownerships
+                                          ::state/players
+                                          ::state/reserves
+                                          ::state/territories] :as state} ::core/state}
+                                 {:keys [::player
                                          ::dispatchments
                                          ::movements] :as event-data}]
   (validate-state state)
   (validate-event-data ::orders-dispatched-handler-event-data event-data)
-  (cond 
+  (cond
     (query/in-distribution-phase? state) "not in the orders phase"
-    (not (some 
-           (partial = player) 
+    (not (some
+           (partial = player)
            players)) "unknown player"
-    (some 
-      (comp 
-        not 
-        (partial contains? territories)) 
-      (flatten [(map first dispatchments) 
-                (map ::from movements) 
+    (some
+      (comp
+        not
+        (partial contains? territories))
+      (flatten [(map first dispatchments)
+                (map ::from movements)
                 (map ::to movements)])) "unknown territory"
-    (some 
-      (comp 
+    (some
+      (comp
         (partial not= player)
-        (partial get ownerships)) 
+        (partial get ownerships))
       (flatten [(map first dispatchments)
                 (map ::from movements)])) "not owned territory"
-    (> 
+    (>
        (apply + (map second dispatchments))
        (get reserves player)) "not enough reserves"
-    (some 
-      (partial > state/min-garrison) 
-      (map 
-        (fn [movement] (- 
+    (some
+      (partial > state/min-garrison)
+      (map
+        (fn [movement] (-
                           (get garrisons (::from movement))
-                          (::quantity movement))) 
+                          (::quantity movement)))
         movements)) "not enough armies"
-    (not= (count orders) 
-          (dec (count players))) (assoc-in 
-                                   state 
+    (not= (count orders)
+          (dec (count players))) (assoc-in
+                                   state
                                    [::state/orders player]
                                    {::state/dispatchments dispatchments
-                                    ::state/movements (mapv 
-                                                        (fn [{:keys [::from 
-                                                                     ::to 
+                                    ::state/movements (mapv
+                                                        (fn [{:keys [::from
+                                                                     ::to
                                                                      ::quantity]}]
-                                                          {::state/from from 
+                                                          {::state/from from
                                                            ::state/to to
                                                            ::state/quantity quantity})
                                                         movements)})
-    :else (update 
-            ::garrisons 
-            (fn [garrisons] 
+    :else (update
+            ::garrisons
+            (fn [garrisons]
               (hash-map (for [[territory armies] garrisons]
                           [territory ((fnil + 0) (get dispatchments territory) (get garrisons territory))]))))))
 
 
-(def event-handlers 
+(def event-handlers
   {:game-started game-started-handler
    :territories-claimed territories-claimed-handler
    :orders-dispatched orders-dispatched-handler})
